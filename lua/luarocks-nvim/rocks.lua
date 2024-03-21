@@ -1,5 +1,5 @@
-local paths = require("luarocks.paths")
-local notify = require("luarocks.notify")
+local paths = require("luarocks-nvim.paths")
+local notify = require("luarocks-nvim.notify")
 
 local function install(rocks)
 	local file, error = io.open(paths.rockspec, "w+")
@@ -30,6 +30,11 @@ build = { type = "builtin" }
 end
 
 local function ensure(rocks)
+	-- There are no rocks requests
+	if not rocks or #rocks == 0 then
+		return
+	end
+
 	-- Get a list of installed luarocks
 	local installed_output = vim.fn.system({ paths.luarocks, "list", "--porcelain" })
 

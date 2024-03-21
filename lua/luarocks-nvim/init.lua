@@ -1,6 +1,7 @@
-local paths = require("luarocks.paths")
-local rocks = require("luarocks.rocks")
-local build = require("luarocks.build")
+local paths = require("luarocks-nvim.paths")
+local rocks = require("luarocks-nvim.rocks")
+local build = require("luarocks-nvim.build")
+local notify = require("luarocks-nvim.notify")
 
 return {
 	setup = function(opts)
@@ -14,13 +15,23 @@ return {
 		-- Make .so files available
 		package.cpath = package.cpath .. ";" .. paths.lib
 
-		-- There are not rocks requests
-		if not opts.rocks or #opts.rocks == 0 then
-			return
-		end
-
 		-- Check that the system is ready to install rocks
 		if build.is_prepared() then
+			-- Invoke the luarocks loader. This allows many versions of the same
+			-- dependency to exist within the Lua environment.
+			--
+			-- See https://github.com/luarocks/luarocks/wiki/Using-LuaRocks#multiple-versions-using-the-luarocks-package-loader for details.
+			local ok, err = pcall(require, "luarocks.loader")
+
+			if not ok then
+				notify.error(
+					string.format(
+						"Unable to load the luarocks package loader. Try re-running the build stage (`:Lazy build luarocks.nvim`). Full trace: %s",
+						err
+					)
+				)
+			end
+
 			-- We have requested rocks so ensure they are installed
 			rocks.ensure(opts.rocks)
 		else
